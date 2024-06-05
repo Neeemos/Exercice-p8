@@ -19,4 +19,16 @@ class VoituresController extends AbstractController
             'cars' => $cars,
         ]);
     }
+    #[Route('/car/{id}', name: 'app_voiture')]
+    public function car(int $id, VoitureRepository $repository): Response
+    {
+        $car = $repository->find($id);
+        if (!$car) {
+            return $this->redirect('/');
+        }
+        return $this->render('voitures/car.html.twig', [
+            'controller_name' => 'VoituresController',
+            'car' => $car,
+        ]);
+    }
 }
