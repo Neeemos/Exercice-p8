@@ -5,64 +5,63 @@ namespace App\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use App\Repository\VoitureRepository;
+use App\Repository\CarRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use App\Form\VoitureType;
-use App\Entity\Voiture;
+use App\Form\CarType;
+use App\Entity\Car;
 use Symfony\Component\HttpFoundation\Request;
 
-class VoituresController extends AbstractController
+
+class CarController extends AbstractController
 {
     #[Route('/', name: 'app_home')]
-    public function index(VoitureRepository $repository): Response
+    public function index(CarRepository $repository): Response
     {
         $cars = $repository->findAll();
-        return $this->render('voitures/index.html.twig', [
-            'controller_name' => 'VoituresController',
+        return $this->render('car/index.html.twig', [
             'cars' => $cars,
         ]);
     }
     #[Route('/car/{id}', name: 'app_car')]
-    public function car(int $id, VoitureRepository $repository): Response
+    public function car(int $id, CarRepository $repository): Response
     {
         $car = $repository->find($id);
         if (!$car) {
-            return $this->redirect('/');
+            throw $this->createNotFoundException('Car not found');
         }
-        return $this->render('voitures/car.html.twig', [
-            'controller_name' => 'VoituresController',
+        return $this->render('car/car.html.twig', [
             'car' => $car,
         ]);
     }
     #[Route('/car/{id}/remove', name: 'app_car_remove')]
-    public function remove(int $id, VoitureRepository $repository,  EntityManagerInterface $entityManagerInterface): Response
+    public function remove(int $id, CarRepository $repository,  EntityManagerInterface $entityManagerInterface): Response
     {
         $car = $repository->find($id);
         if (!$car) {
-            return $this->redirect('/');
+            throw $this->createNotFoundException('Car not found');
         }
         $entityManagerInterface->remove($car);
         $entityManagerInterface->flush();
-        return $this->redirect('/');
+        return $this->redirectToRoute('app_home');
     }
 
     #[Route('/add', name: 'app_car_form')]
     public function addCar(Request $request, EntityManagerInterface $entityManager): Response
 {
-    $voiture = new Voiture();
+    $car = new Car();
 
-    $form = $this->createForm(VoitureType::class, $voiture);
+    $form = $this->createForm(CarType::class, $car);
 
     $form->handleRequest($request);
     if ($form->isSubmitted() && $form->isValid()) {
-        $voiture = $form->getData();
-        $entityManager->persist($voiture);
+        $car = $form->getData();
+        $entityManager->persist($car);
         $entityManager->flush();
 
-        return $this->redirectToRoute('app_car', ['id' => $voiture->getId()]);
+        return $this->redirectToRoute('app_car', ['id' => $car->getId()]);
     }
 
-    return $this->render('voitures/form.html.twig', [
+    return $this->render('car/form.html.twig', [
         'form' => $form,
     ]);
 }
